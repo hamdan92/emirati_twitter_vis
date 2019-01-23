@@ -1,0 +1,322 @@
+<!DOCTYPE <!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Emirati Twitter</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm"
+        crossorigin="anonymous">
+    <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN"
+        crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q"
+        crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl"
+        crossorigin="anonymous"></script>
+
+
+
+    <script src="https://d3js.org/d3.v5.min.js"></script>
+    <style>
+        #abx {
+            fill: palevioletred
+        }
+
+        .scroll {
+            max-height: 600;
+            overflow-y: auto;
+        }
+    </style>
+
+</head>
+
+<body>
+
+    <div class='container'>
+
+        <div class='row'>
+
+            <div class='col'>
+                <div class='card'>
+                    <svg id='wc'></svg>
+                </div>
+
+
+            </div>
+
+            <div class='col scroll'>
+                <div class='card'>
+                    <ul class="list-group" id='tweets'>
+                        <li class="list-group-item">Cras justo odio</li>
+                        <li class="list-group-item">Dapibus ac facilisis in</li>
+                        <li class="list-group-item">Morbi leo risus</li>
+                        <li class="list-group-item">Porta ac consectetur ac</li>
+                        <li class="list-group-item">Vestibulum at eros</li>
+                    </ul>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+
+
+
+    <script>
+
+        var margin = 100
+        var width = 600 - 2 * margin
+        var height = 600 - 2 * margin
+
+        function drawWordCloud(tweetos, data, vg, font_div) {
+
+
+
+
+            var maxVal = parseInt(data[0]['count'])
+            var step = maxVal / 4;
+            var textX = width / 2;
+            var textY = height / 2;
+            var itr = 0;
+
+            var colors = ['cornflowerblue', 'darkolivegreen', 'gray', 'hotpink', 'darkslateblue', 'salmon', 'palevioletred']
+
+
+            BBoxs = []
+
+
+            var t = svg.append('text')
+                .attr('transform', `translate(${textX},${textY})`)
+                .text(data[0]['word'])
+                .style('font', `${data[0]['count'] / 30}px sans-serif`)
+                .attr('text-anchor', 'start')
+                .style('opacity', '0')
+
+            var tbox = svg.append('rect')
+                .attr('transform', `translate(${textX + t.node().getBBox().x},${textY + t.node().getBBox().y})`)
+                .attr('width', t.node().getBBox().width)
+                .attr('height', t.node().getBBox().height)
+                .style('opacity', '0')
+            tBBox = tbox.node().getBBox();
+            tBBox.x = textX + t.node().getBBox().x;
+            tBBox.y = textY + t.node().getBBox().y
+
+
+
+            BBoxs.push(tbox)
+
+            txts = []
+
+
+            for (i = 0; i < 100; i++) {
+
+                txt = svg.append('g')
+                    .append('text')
+                    //.attr('transform', `translate(${textX},${textY})`)
+                    .text(data[i]['word'])
+                    .style('font', `${data[i]['count'] / font_div}px sans-serif`)
+                    .style('fill', colors[Math.floor(Math.random() * colors.length - 1) + 0])
+                    .attr('text-anchor', 'middle')
+
+
+                txts.push(txt)
+            }
+
+            placed = []
+            txt0_x = Math.floor(Math.random() * width) + 10
+            txt0_y = Math.floor(Math.random() * height) + 10
+            txts[0].attr('transform', `translate(${txt0_x},${txt0_y})`)
+            txt0_box = txts[0].node().getBBox()
+            txt0_box.x += txt0_x
+            txt0_box.y += txt0_y
+
+
+
+            placed.push(txt0_box)
+            var font_smul = 1
+
+            for (i = 0; i < 100; i++) {
+
+
+                overlap = true
+                failing_counter = 0
+                while (overlap) {
+                    overlap = false
+                    ntxt_l = Math.floor(Math.random() * width) + 10 + txts[i].node().getBBox().x
+                    ntxt_t = (Math.floor(Math.random() * height) + 10) + txts[i].node().getBBox().y
+                    ntxt_r = txts[i].node().getBBox().width + ntxt_l
+                    ntxt_b = txts[i].node().getBBox().height + ntxt_t
+
+                    var rectA = {
+                        left: ntxt_l,
+                        top: ntxt_t,
+                        right: ntxt_r,
+                        bottom: ntxt_b
+                    };
+
+
+                    for (j = 0; j < placed.length; j++) {
+                        otxt_box = placed[j];
+
+                        var rectB = {
+                            left: otxt_box.x,
+                            top: otxt_box.y,
+                            right: otxt_box.x + otxt_box.width,
+                            bottom: otxt_box.y + otxt_box.height
+                        };
+
+
+                        if (intersectRect(rectA, rectB)) {
+
+                            overlap = true
+                        }
+
+                    }
+
+                    if (overlap == false) {
+
+                        rectA.left -= txts[i].node().getBBox().x
+                        rectA.top -= txts[i].node().getBBox().y
+                        txts[i].attr('transform', `translate(${rectA.left},${rectA.top})`)
+
+
+
+                        ntext_box = txts[i].node().getBBox()
+
+
+
+                        ntext_box.x += rectA.left
+                        ntext_box.y += rectA.top
+
+                        //txts[i].attr('transform', `translate(${ntext_box.x},${ntext_box.y })`)
+
+
+                        d3.select(txts[i].node().parentNode).append('rect')
+                            .attr('width', ntext_box.width)
+                            .attr('height', ntext_box.height)
+                            .attr('transform', `translate(${ntext_box.x},${ntext_box.y})`)
+                            .style('opacity', '0')
+                            .on('mouseover', handle_mouse_over)
+                            .on('mouseout', handle_mouse_out)
+
+
+
+
+                        placed.push(ntext_box)
+                    }
+
+                    else {
+
+                        failing_counter++
+                        if (failing_counter == 100) {
+
+                            return -1;
+                        }
+
+                    }
+                }
+
+
+
+
+            }
+
+
+
+
+            /*function intersectRect(r1, r2) {
+                return !(r2.left > r1.right ||
+                    r2.right < r1.left ||
+                    r2.top > r1.bottom ||
+                    r2.bottom < r1.top);
+            }*/
+
+            function intersectRect(a, b) {
+                return (a.left <= b.right &&
+                    b.left <= a.right &&
+                    a.top <= b.bottom &&
+                    b.top <= a.bottom)
+            }
+
+
+            function handle_mouse_over() {
+                console.log(d3.select(this.parentNode).select('text').text())
+                console.log(tweetos[d3.select(this.parentNode).select('text').text()])
+                $('.list-group').empty();
+                for (i = 0; i < tweetos[d3.select(this.parentNode).select('text').text()].length; i++) {
+
+                    $('.list-group').append(`<li class='list-group-item'>${tweetos[d3.select(this.parentNode).select('text').text()][i]}</li>`);
+
+                }
+                d3.select(this)
+                    .style('opacity', '0.1')
+            }
+
+            function handle_mouse_out() {
+                d3.select(this)
+                    .style('opacity', '0')
+            }
+
+
+
+
+
+            return 0;
+
+        }
+
+        font_div = 1
+
+        var svg = d3.select('#wc')
+            .attr('width', width + 2 * margin)
+            .attr('height', height + 2 * margin)
+            .append('g')
+            .attr('transform', `translate(${margin},${margin})`)
+
+        //drawWordCloud(svg,font_div)
+        d3.csv('data/p_tweets.csv').then(function (tweets) {
+            console.log(tweets[0])
+            tweetos = {}
+            for (i = 0; i < tweets.length; i++) {
+
+                if (tweetos[tweets[i]['word']] == null)
+                    tweetos[tweets[i]['word']] = []
+
+                tweetos[tweets[i]['word']].push(tweets[i]['tweet'])
+
+
+            }
+
+            //console.log(tweetos)
+            d3.csv('data/popular_words.csv').then(function (data) {
+
+                var result = -1
+                while (result == -1) {
+
+                    svg.selectAll("*").remove();
+                    font_div++;
+                    result = drawWordCloud(tweetos, data, svg, font_div)
+                    //console.log(result)
+
+                }
+
+            });
+
+
+        })
+
+
+
+
+
+
+
+
+
+    </script>
+</body>
+
+</html>
